@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # MariaDB Master
+  db-master:
+    image: mariadb:10.6
+    container_name: db-master
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: app_db
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password
+    volumes:
+      - ./mysql-master/conf.d:/etc/mysql/conf.d
+      - ./mysql-master/init:/docker-entrypoint-initdb.d
+      - master_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+
+  proxysql:
+    image: proxysql/proxysql:2.5.5
+    container_name: proxysql
+    volumes:
+      - ./proxysql.cnf:/etc/proxysql.cnf
+    ports:
+      - "6033:6033"
+      - "6032:6032"
+    depends_on:
+      - db-master
+      - db-slave-1
+      - db-slave-2
+      - db-slave-3
+    networks:
+      - app-network
+
+  # MariaDB Slaves
+  db-slave-1:
+    image: mariadb:10.6
+    container_name: db-slave-1
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+    command: --server-id=2
+    volumes:
+      - ./mysql-slave/conf.d:/etc/mysql/conf.d
+      - ./mysql-slave/init:/docker-entrypoint-initdb.d
+      - slave1_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    depends_on:
+      - db-master
+    networks:
+      - app-network
+
+  dashboard:
+    build: ../dashboard
+    container_name: dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - proxysql
+    networks:
+      - app-network
+
+  db-slave-2:
+    image: mariadb:10.6
+    container_name: db-slave-2
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+    command: --server-id=3
+    volumes:
+      - ./mysql-slave/conf.d:/etc/mysql/conf.d
+      - ./mysql-slave/init:/docker-entrypoint-initdb.d
+      - slave2_data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    depends_on:
+      - db-master
+    networks:
+      - app-network
+
+  db-slave-3:
+    image: mariadb:10.6
+    container_name: db-slave-3
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+    command: --server-id=4
+    volumes:
+      - ./mysql-slave/conf.d:/etc/mysql/conf.d
+      - ./mysql-slave/init:/docker-entrypoint-initdb.d
+      - slave3_data:/var/lib/mysql
+    ports:
+      - "3309:3306"
+    depends_on:
+      - db-master
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  master_data:
+  slave1_data:
+  slave2_data:
+  slave3_data:

@@ -1,0 +1,47 @@
+datadir="/var/lib/proxysql"
+
+admin_variables=
+{
+    admin_credentials="admin:admin;radmin:radmin"
+    mysql_ifaces="0.0.0.0:6032"
+}
+
+mysql_variables=
+{
+    threads=4
+    max_connections=2048
+    default_query_delay=0
+    default_query_timeout=36000000
+    have_compress=true
+    poll_timeout=2000
+    interfaces="0.0.0.0:6033"
+    default_schema="information_schema"
+    stacksize=1048576
+    server_version="5.5.30"
+    connect_timeout_server=10000
+    monitor_username="monitor"
+    monitor_password="monitor_password"
+    monitor_history=60000
+    monitor_connect_interval=2000
+    monitor_ping_interval=2000
+}
+
+mysql_servers =
+(
+    { address="db-master", port=3306, hostgroup=10, max_connections=200 },
+    { address="db-slave-1", port=3306, hostgroup=20, max_connections=200 },
+    { address="db-slave-2", port=3306, hostgroup=20, max_connections=200 },
+    { address="db-slave-3", port=3306, hostgroup=20, max_connections=200 }
+)
+
+mysql_users =
+(
+    { username="laravel_user", password="laravel_pass", default_hostgroup=10, active=1 },
+    { username="root", password="root_password", default_hostgroup=10, active=1 }
+)
+
+mysql_query_rules =
+(
+    { rule_id=1, active=1, match_pattern="^SELECT.*FOR UPDATE", destination_hostgroup=10, apply=1 },
+    { rule_id=2, active=1, match_pattern="^SELECT", destination_hostgroup=20, apply=1 }
+)
