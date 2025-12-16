@@ -28,6 +28,7 @@ A production-ready template for **MariaDB Master-Slave Replication** integrated 
    - URL: `http://localhost:5000`
 
 ## Architecture
+![Cluster Topology](docs/topology.png)
 - **ProxySQL**: Port 6033 (Data), 6032 (Admin)
 - **Master**: Port 3306 (Internal)
 - **Slaves**: Port 3306 (Internal)
