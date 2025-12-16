@@ -25,7 +25,7 @@ fi
 configure_slave() {
     SLAVE_NAME=$1
     echo "Configuring $SLAVE_NAME..."
-    docker exec $SLAVE_NAME mysql -u root -proot_password -e "STOP SLAVE; CHANGE MASTER TO MASTER_HOST='db-master', MASTER_USER='replicator', MASTER_PASSWORD='replica_pass', MASTER_LOG_FILE='$LOG_FILE', MASTER_LOG_POS=$POS; START SLAVE;"
+    docker exec $SLAVE_NAME mysql -u root -proot_password -e "STOP SLAVE; CHANGE MASTER TO MASTER_HOST='db-master', MASTER_USER='replication_system', MASTER_PASSWORD='Angk4-SA12a&YA', MASTER_LOG_FILE='$LOG_FILE', MASTER_LOG_POS=$POS; START SLAVE;"
     echo "$SLAVE_NAME configured."
 }
 

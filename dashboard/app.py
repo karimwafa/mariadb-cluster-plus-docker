@@ -4,13 +4,25 @@ from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
 
-# Configuring DB Connections (Exposed Ports from Docker)
+import os
+
+# Configuring DB Connections
+# Priority: 1. Environment Variables (Multi-Server/Docker), 2. Localhost defaults (Dev)
+def get_config(env_var, default_host, default_port, user='root', password='root_password', db='app_db'):
+    return {
+        'host': os.environ.get(env_var, default_host),
+        'port': int(os.environ.get(f"{env_var}_PORT", default_port)),
+        'user': user,
+        'password': password,
+        'db': db
+    }
+
 DB_CONFIG = {
-    'master': {'host': '127.0.0.1', 'port': 3306, 'user': 'root', 'password': 'root_password', 'db': 'app_db'},
-    'slave1': {'host': '127.0.0.1', 'port': 3307, 'user': 'root', 'password': 'root_password', 'db': 'app_db'},
-    'slave2': {'host': '127.0.0.1', 'port': 3308, 'user': 'root', 'password': 'root_password', 'db': 'app_db'},
-    'slave3': {'host': '127.0.0.1', 'port': 3309, 'user': 'root', 'password': 'root_password', 'db': 'app_db'},
-    'proxysql': {'host': '127.0.0.1', 'port': 6033, 'user': 'laravel_user', 'password': 'laravel_pass', 'db': None}, # Data Port
+    'master': get_config('DB_MASTER_HOST', '127.0.0.1', 3306),
+    'slave1': get_config('DB_SLAVE1_HOST', '127.0.0.1', 3307),
+    'slave2': get_config('DB_SLAVE2_HOST', '127.0.0.1', 3308),
+    'slave3': get_config('DB_SLAVE3_HOST', '127.0.0.1', 3309),
+    'proxysql': get_config('DB_PROXYSQL_HOST', '127.0.0.1', 6033, user='laravel_user', password='laravel_pass', db=None),
 }
 
 def get_db_connection(config_name):
@@ -143,20 +155,15 @@ def test_service(service):
 
 @app.route('/api/browse/<node>')
 def browse_node(node):
-    port_map = {
-        'master': 3306,
-        'slave1': 3307,
-        'slave2': 3308,
-        'slave3': 3309
-    }
-    
-    if node not in port_map:
+    if node not in DB_CONFIG:
         return jsonify({'error': 'Invalid node'}), 400
+    
+    cfg = DB_CONFIG[node]
         
     try:
         conn = pymysql.connect(
-            host='127.0.0.1',
-            port=port_map[node],
+            host=cfg['host'],
+            port=cfg['port'],
             user='root',
             password='root_password',
             cursorclass=pymysql.cursors.DictCursor

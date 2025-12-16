@@ -5,6 +5,7 @@ services:
   db-master:
     image: mariadb:10.6
     container_name: db-master
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: app_db
@@ -22,6 +23,7 @@ services:
   proxysql:
     image: proxysql/proxysql:2.5.5
     container_name: proxysql
+    restart: always
     volumes:
       - ./proxysql.cnf:/etc/proxysql.cnf
     ports:
@@ -39,6 +41,7 @@ services:
   db-slave-1:
     image: mariadb:10.6
     container_name: db-slave-1
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
     command: --server-id=2
@@ -56,10 +59,19 @@ services:
   dashboard:
     build: ../dashboard
     container_name: dashboard
+    restart: always
     ports:
       - "5000:5000"
     environment:
       - FLASK_ENV=development
+      - DB_MASTER_HOST=db-master
+      - DB_SLAVE1_HOST=db-slave-1
+      - DB_SLAVE1_HOST_PORT=3306
+      - DB_SLAVE2_HOST=db-slave-2
+      - DB_SLAVE2_HOST_PORT=3306
+      - DB_SLAVE3_HOST=db-slave-3
+      - DB_SLAVE3_HOST_PORT=3306
+      - DB_PROXYSQL_HOST=proxysql
     depends_on:
       - proxysql
     networks:
@@ -68,6 +80,7 @@ services:
   db-slave-2:
     image: mariadb:10.6
     container_name: db-slave-2
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
     command: --server-id=3
@@ -85,6 +98,7 @@ services:
   db-slave-3:
     image: mariadb:10.6
     container_name: db-slave-3
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
     command: --server-id=4
